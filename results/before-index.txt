@@ -1,0 +1,24 @@
+﻿                                                             QUERY PLAN                                                              
+-------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=9507.93..9510.26 rows=20 width=32) (actual time=123.684..341.631 rows=20 loops=1)
+   Buffers: shared hit=5449
+   ->  Gather Merge  (cost=9507.93..9559.73 rows=444 width=32) (actual time=123.683..341.626 rows=20 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=5449
+         ->  Sort  (cost=8507.91..8508.46 rows=222 width=32) (actual time=64.428..64.430 rows=14 loops=3)
+               Sort Key: created_at DESC
+               Sort Method: top-N heapsort  Memory: 27kB
+               Buffers: shared hit=5449
+               Worker 0:  Sort Method: top-N heapsort  Memory: 27kB
+               Worker 1:  Sort Method: top-N heapsort  Memory: 27kB
+               ->  Parallel Seq Scan on orders  (cost=0.00..8502.00 rows=222 width=32) (actual time=64.199..64.265 rows=333 loops=3)
+                     Filter: ((customer_id = 12345) AND ((status)::text = 'PAID'::text))
+                     Rows Removed by Filter: 166333
+                     Buffers: shared hit=5377
+ Planning:
+   Buffers: shared hit=97
+ Planning Time: 11.179 ms
+ Execution Time: 341.939 ms
+(20 rows)
+

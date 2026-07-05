@@ -3,6 +3,7 @@ from typing import Optional
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import FuncFormatter
 
 
@@ -104,25 +105,37 @@ def main() -> None:
         }
     )
 
-    fig = plt.figure(figsize=(12, 8), constrained_layout=True)
+    fig = plt.figure(figsize=(13.5, 8.5))
     fig.suptitle(
         "PostgreSQL Composite Index Benchmark",
-        fontsize=18,
+        fontsize=19,
         fontweight="bold",
         color=TEXT_COLOR,
-        x=0.04,
+        x=0.055,
+        y=0.97,
         ha="left",
     )
     fig.text(
-        0.04,
-        0.942,
+        0.055,
+        0.925,
         "Generated from results/summary.csv and results/resource-summary.csv",
         fontsize=9.5,
         color=MUTED_TEXT_COLOR,
         ha="left",
     )
 
-    layout = fig.add_gridspec(3, 4, height_ratios=[0.8, 2.4, 2.0])
+    layout = GridSpec(
+        3,
+        4,
+        figure=fig,
+        left=0.08,
+        right=0.97,
+        top=0.86,
+        bottom=0.08,
+        hspace=0.48,
+        wspace=0.43,
+        height_ratios=[0.86, 2.35, 2.15],
+    )
     kpi_axes = [fig.add_subplot(layout[0, i]) for i in range(4)]
     ax_time = fig.add_subplot(layout[1, :2])
     ax_buffers = fig.add_subplot(layout[1, 2:])
@@ -142,9 +155,9 @@ def main() -> None:
         ax.set_yticks([])
         for spine in ax.spines.values():
             spine.set_visible(False)
-        ax.text(0.04, 0.72, label, transform=ax.transAxes, fontsize=9, color=MUTED_TEXT_COLOR)
-        ax.text(0.04, 0.36, value, transform=ax.transAxes, fontsize=18, fontweight="bold", color=color)
-        ax.text(0.04, 0.12, caption, transform=ax.transAxes, fontsize=8.5, color=MUTED_TEXT_COLOR)
+        ax.text(0.05, 0.72, label, transform=ax.transAxes, fontsize=9, color=MUTED_TEXT_COLOR)
+        ax.text(0.05, 0.36, value, transform=ax.transAxes, fontsize=18, fontweight="bold", color=color)
+        ax.text(0.05, 0.12, caption, transform=ax.transAxes, fontsize=8.2, color=MUTED_TEXT_COLOR)
 
     labels = [normalize_scenario(scenario) for scenario in ordered_scenarios]
     times = [float(timing.loc[scenario, "execution_time_ms"]) for scenario in ordered_scenarios]
@@ -162,7 +175,7 @@ def main() -> None:
     ax_time.set_xlim(0, max(times) * 1.22)
 
     style_axis(ax_buffers)
-    add_panel_title(ax_buffers, "Top-level shared buffers", "Blocks reported by EXPLAIN BUFFERS")
+    add_panel_title(ax_buffers, "Shared buffers", "Top-level blocks reported by EXPLAIN BUFFERS")
     hits = [float(resources.loc[scenario, "shared_hit_blocks"]) for scenario in ordered_scenarios]
     reads = [float(resources.loc[scenario, "shared_read_blocks"]) for scenario in ordered_scenarios]
     hit_bars = ax_buffers.barh(y_positions, hits, color=colors, height=0.52, label="shared hit")
@@ -204,7 +217,7 @@ def main() -> None:
     ax_details.set_yticks([])
     for spine in ax_details.spines.values():
         spine.set_visible(False)
-    add_panel_title(ax_details, "Plan resource details", "Values extracted from resource-summary.csv")
+    add_panel_title(ax_details, "Plan resource details", "Extracted from resource-summary.csv")
 
     detail_rows = [
         ("Sort memory", "sort_memory_kb", "kB"),
@@ -212,8 +225,8 @@ def main() -> None:
         ("Shared reads", "shared_read_blocks", "blocks"),
     ]
     y = 0.72
-    ax_details.text(0.38, 0.84, "Before", transform=ax_details.transAxes, fontsize=9, color=MUTED_TEXT_COLOR, ha="right")
-    ax_details.text(0.63, 0.84, "After", transform=ax_details.transAxes, fontsize=9, color=MUTED_TEXT_COLOR, ha="right")
+    ax_details.text(0.42, 0.84, "Before", transform=ax_details.transAxes, fontsize=9, color=MUTED_TEXT_COLOR, ha="right")
+    ax_details.text(0.72, 0.84, "After", transform=ax_details.transAxes, fontsize=9, color=MUTED_TEXT_COLOR, ha="right")
     for label, column, unit in detail_rows:
         before_value = float(resources.loc["before_index", column])
         after_value = float(resources.loc["after_index", column])
@@ -223,17 +236,18 @@ def main() -> None:
             before_text = f"{before_text} {unit}"
             after_text = f"{after_text} {unit}"
         ax_details.text(0.04, y, label, transform=ax_details.transAxes, fontsize=10, color=TEXT_COLOR)
-        ax_details.text(0.38, y, before_text, transform=ax_details.transAxes, fontsize=10, color=BEFORE_COLOR, ha="right")
-        ax_details.text(0.63, y, after_text, transform=ax_details.transAxes, fontsize=10, color=AFTER_COLOR, ha="right")
+        ax_details.text(0.42, y, before_text, transform=ax_details.transAxes, fontsize=10, color=BEFORE_COLOR, ha="right")
+        ax_details.text(0.72, y, after_text, transform=ax_details.transAxes, fontsize=10, color=AFTER_COLOR, ha="right")
         y -= 0.18
 
     ax_details.text(
         0.04,
-        0.08,
-        "Note: these are PostgreSQL plan-level indicators, not OS-level CPU or RAM metrics.",
+        0.07,
+        "Note: PostgreSQL plan-level indicators.\nNot OS-level CPU or RAM metrics.",
         transform=ax_details.transAxes,
-        fontsize=8.5,
+        fontsize=8.3,
         color=MUTED_TEXT_COLOR,
+        linespacing=1.35,
     )
 
     fig.savefig(OUTPUT_PATH, dpi=180, bbox_inches="tight")
